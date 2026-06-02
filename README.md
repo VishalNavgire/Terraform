@@ -2,11 +2,10 @@
 
 ## 📖 About This Repository
 
-This repository documents my hands-on Terraform learning journey, from foundational concepts to advanced Infrastructure as Code (IaC) practices.
+This repository documents my hands-on Terraform journey, from foundational concepts to advanced Infrastructure as Code (IaC) practices.
 
 The goal of this repository is to:
 
-* Learn Terraform through practical examples
 * Build reusable infrastructure modules
 * Understand state management and remote backends
 * Implement Infrastructure as Code best practices
@@ -45,10 +44,8 @@ Planned integrations:
 
 * GitHub Actions
 * Terraform Validate
-* Terraform Format Check
 * Terraform Plan
 * Security Scanning
-* Automated Documentation
 
 ## 👤 Author
 ### **Vishal Navgire**  
