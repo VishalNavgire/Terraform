@@ -59,3 +59,32 @@ jobs:
           path: |
             terraform/tfplan
             terraform/plan.txt
+
+  notify-plan:
+
+      needs: terraform-plan
+
+      if: success()
+
+      runs-on: ubuntu-latest
+
+      steps:
+
+        - uses: actions/checkout@v4
+
+        - name: Teams Notification
+          shell: pwsh
+          env:
+            TEAMS_INFO_WEBHOOK: ${{ secrets.TEAMS_INFO_WEBHOOK }}
+          run: |
+
+            . ./modules/notifications/powershell/Send-TeamsNotification.ps1
+
+            Send-TeamsNotification `
+              -Severity INFO `
+              -PipelineName "Terraform Plan" `
+              -Message "Terraform plan generated successfully. Review plan artifact before approving deployment." `
+              -Repository "${{ github.repository }}" `
+              -Branch "${{ github.head_ref }}" `
+              -Committer "${{ github.actor }}" `
+              -WorkflowUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
