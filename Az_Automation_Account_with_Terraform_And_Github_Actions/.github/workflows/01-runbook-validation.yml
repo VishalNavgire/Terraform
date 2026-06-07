@@ -55,16 +55,58 @@ jobs:
       - python-lint
       - powershell-lint
 
-    if: always()
+    if: success()
 
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Notify Teams
+      - uses: actions/checkout@v4
+
+      - name: Send Teams Success Notification
+        shell: pwsh
+        env:
+          TEAMS_INFO_WEBHOOK: ${{ secrets.TEAMS_INFO_WEBHOOK }}
         run: |
-          curl -H "Content-Type: application/json" \
-          -d '{
-            "text":"Runbook validation completed successfully. Code is ready for review and merge."
-          }' \
-          ${{ secrets.TEAMS_WEBHOOK_URL }}
+
+          . ./modules/notifications/powershell/Send-TeamsNotification.ps1
+
+          Send-TeamsNotification `
+            -Severity INFO `
+            -PipelineName "Runbook Validation" `
+            -Message "Runbook validation completed successfully. Code is ready for review and merge." `
+            -Repository "${{ github.repository }}" `
+            -Branch "${{ github.head_ref }}" `
+            -Committer "${{ github.actor }}" `
+            -WorkflowUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  notify-failure:
+
+    needs:
+      - python-lint
+      - powershell-lint
+
+    if: failure()
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Send Teams Failure Notification
+        shell: pwsh
+        env:
+          TEAMS_FAILURE_WEBHOOK: ${{ secrets.TEAMS_FAILURE_WEBHOOK }}
+        run: |
+
+          . ./modules/notifications/powershell/Send-TeamsNotification.ps1
+
+          Send-TeamsNotification `
+            -Severity FAILURE `
+            -PipelineName "Runbook Validation" `
+            -Message "Runbook validation failed. Review pipeline logs." `
+            -Repository "${{ github.repository }}" `
+            -Branch "${{ github.head_ref }}" `
+            -Committer "${{ github.actor }}" `
+            -WorkflowUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
