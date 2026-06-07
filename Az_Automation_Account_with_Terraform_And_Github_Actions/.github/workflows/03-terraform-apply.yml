@@ -39,3 +39,61 @@ jobs:
           terraform apply \
             -var-file=runbooks.tfvars \
             -auto-approve
+  
+  notify-success:
+
+    needs: terraform-apply
+
+    if: success()
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Teams Success Notification
+        shell: pwsh
+        env:
+          TEAMS_INFO_WEBHOOK: ${{ secrets.TEAMS_INFO_WEBHOOK }}
+        run: |
+
+          . ./modules/notifications/powershell/Send-TeamsNotification.ps1
+
+          Send-TeamsNotification `
+            -Severity INFO `
+            -PipelineName "Terraform Apply" `
+            -Message "Terraform deployment completed successfully." `
+            -Repository "${{ github.repository }}" `
+            -Branch "${{ github.ref_name }}" `
+            -Committer "${{ github.actor }}" `
+            -WorkflowUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+  notify-failure:
+
+    needs: terraform-apply
+
+    if: failure()
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+
+      - name: Teams Failure Notification
+        shell: pwsh
+        env:
+          TEAMS_ERROR_WEBHOOK: ${{ secrets.TEAMS_ERROR_WEBHOOK }}
+        run: |
+
+          . ./modules/notifications/powershell/Send-TeamsNotification.ps1
+
+          Send-TeamsNotification `
+            -Severity ERROR `
+            -PipelineName "Terraform Apply" `
+            -Message "Terraform deployment failed. Review workflow logs immediately." `
+            -Repository "${{ github.repository }}" `
+            -Branch "${{ github.ref_name }}" `
+            -Committer "${{ github.actor }}" `
+            -WorkflowUrl "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
