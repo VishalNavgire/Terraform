@@ -1,0 +1,70 @@
+name: Runbook Validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'runbooks/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+
+  detect-changes:
+    runs-on: ubuntu-latest
+
+    outputs:
+      python_changed: ${{ steps.filter.outputs.python }}
+      powershell_changed: ${{ steps.filter.outputs.powershell }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            python:
+              - 'runbooks/python/**/*.py'
+            powershell:
+              - 'runbooks/powershell/**/*.ps1'
+
+  python-lint:
+    needs: detect-changes
+
+    if: needs.detect-changes.outputs.python_changed == 'true'
+
+    uses: ./.github/workflows/04-build-pylint.yml
+
+    with:
+      python-version: "3.12"
+
+  powershell-lint:
+    needs: detect-changes
+
+    if: needs.detect-changes.outputs.powershell_changed == 'true'
+
+    uses: ./.github/workflows/05-build-powershell.yml
+
+  notify-teams:
+
+    needs:
+      - python-lint
+      - powershell-lint
+
+    if: always()
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Notify Teams
+        run: |
+          curl -H "Content-Type: application/json" \
+          -d '{
+            "text":"Runbook validation completed successfully. Code is ready for review and merge."
+          }' \
+          ${{ secrets.TEAMS_WEBHOOK_URL }}
