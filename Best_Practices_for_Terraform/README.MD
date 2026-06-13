@@ -418,6 +418,40 @@ Detects:
 * Open network ports
 * Encryption issues
 
+Example
+Imagine you accidentally create:
+```hcl
+resource "azurerm_storage_account" "sa" {
+
+  allow_nested_items_to_be_public = true
+
+}
+```
+Checkov
+Checkov scans Terraform and says this before creating a storage resource
+```text
+Storage Account allows public access.
+```
+Another Example:
+```hcl
+resource "azurerm_network_security_group" "nsg" {
+  security_rule {
+    destination_port_range = "3389"
+    source_address_prefix = "*"
+  }
+}
+```
+This means:
+```text
+Anyone on internet
+can attempt RDP
+```
+Checkov scans Terraform and says this before creating azurerm_network_security_group resource:
+```text
+CRITICAL
+
+RDP exposed publicly.
+```
 ---
 
 # 17. Always Review Terraform Plans
@@ -471,6 +505,33 @@ Benefits:
 * Change control
 * Compliance
 * Reduced deployment risk
+
+Example
+
+Developer creates PR.
+```text
+Pipeline runs.
+
+Terraform Plan
+
+2 resources add
+1 resource change
+```
+
+Looks okay.
+
+But reviewer notices:
+```text
+Resource Group
+will be destroyed
+```
+
+Reviewer:
+```text
+Reject
+```
+
+Production saved.
 
 ---
 
