@@ -360,7 +360,7 @@ Benefits:
 
 # 15. Use TFLint
 
-Linting identifies configuration issues.
+Linting identifies configuration issues.Before Terraform deploys anything, TFLint checks whether your code follows Terraform best practices.
 
 ```bash
 tflint
@@ -371,6 +371,34 @@ Detects:
 * Provider mistakes
 * Deprecated resources
 * Configuration issues
+
+Example
+
+Suppose you write:
+```hcl
+resource "azurerm_storage_account" "storage" {
+  name                     = "MyStorageAccount"
+  resource_group_name      = azurerm_resource_group.rg.name
+  location                 = "West Europe"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+```
+Terraform may accept it.
+
+However Azure requires:
+
+```text
+Storage Account Name
+
+✔ Lowercase only
+✔ No special characters
+✔ Maximum 24 chars
+```
+TFLint may warn:
+```text
+Storage account name violates naming convention.
+```
 
 ---
 
